@@ -4,11 +4,13 @@ shinyUI(pageWithSidebar(
   headerPanel(title=HTML("Prueba de hipótesis sobre &mu; Normal multivariada"),
               windowTitle="PH media"),
   sidebarPanel(
-    h5('Esta aplicación permite realizar una prueba de hipótesis sobre el vector de medias poblacionales &mu de una distribución normal multivariada.'),
+    h5('Esta aplicación permite realizar una prueba de hipótesis sobre 
+       el vector de medias poblacionale de una distribución normal 
+       multivariada.'),
     
-    h6('La aplicación usa por defecto el ejemplo 5.2 página 214 de Jhonson & Wichern (2007) 
-del libro guía Applied Multivariate Statistical Analysispero, aunque el usuario
-       puede cargar su propia base de datos.'),
+    h6('La aplicación por defecto usa los datos del ejemplo 5.2 página 214 
+        de Jhonson & Wichern (2007) Applied Multivariate Statistical
+        Analysis, sin embargo, el usuario puede subir su propia base de datos para usar la app.'),
     
     fileInput(inputId='file1',
               label='Use el siguiente botón para cargar su base de datos.',
@@ -40,35 +42,29 @@ del libro guía Applied Multivariate Statistical Analysispero, aunque el usuario
                 H<sub>0</sub>: &mu; = &mu;<sub>0</sub>. Escriba los valores del vector separados por un espacio, así como se muestra a continuación:"))),
     tags$textarea(id="vectorIng", cols=20, rows=2, "4 50 10"),#cambiar para que sea varias filas
    
-
-    sliderInput(inputId='alfa',
-                label=HTML("Elija un nivel de confianza para realizar la prueba de hipótesis
-                           para el vector de media &mu;"),
-                min=0.90, max=0.99,
-                value=0.95, step=0.005),
-    
-    img(src="unal.png", height = 60, width = 120),
+   img(src="https://fhernanb.github.io/docs/logo_unal_negro.png",
+       height = 56, width = 140),
     br(),
     br(),
     tags$a(href="https://srunal.github.io", "https://srunal.github.io"),
     br(),
-    h6("Santiago Toro Z."),
-    h6("Freddy Hernández B.")
+   tags$a(href="https://satorozu.github.io", "Santiago Toro Z."),
+   br(),
+   tags$a(href="https://fhernanb.github.io/", "Freddy Hernández B."),
+   h6("")
    
     
     ),
   
   mainPanel(
     tabsetPanel(type = "pills",
-                
                 tabPanel("Verificación de Supuestos",
-                         
-                         h5("Prueba de normalidad multivariada Q-Q Plot"),
+                         h5("QQ plot para las distancias de Mahalanobis"),
                          plotOutput("qqplot", width='500px'),
                          
                          h5(" Tabla de resumen prueba Royston"),
                          verbatimTextOutput("royston"),
-                         h5(" Tabla de resumen prueba Mardía"),
+                         h5(" Tabla de resumen prueba Mardia"),
                          verbatimTextOutput("mardia")),
                          
                          
@@ -78,21 +74,21 @@ del libro guía Applied Multivariate Statistical Analysispero, aunque el usuario
                          textOutput("titleValorp"),
                          plotOutput("grafico1", width='500px'),
                          
-                         h4("Vector de media muestral"),
+                         h4("Vector de medias muestral"),
                          verbatimTextOutput('med_muestra'),
-                         h4("Media de media supuesto"),
-                         verbatimTextOutput('med_ho'),
-                         h4("Matriz de Varianza Covarianza"),
+                         h4("Matriz de covarianzas muestral"),
                          verbatimTextOutput('S_muestra'),
-                         
-                         
-                         
+                         h4("Vector de medias de referencia"),
+                         verbatimTextOutput('med_ho'),
                          h4("- Resultados de la prueba de hipótesis:"),
-                         textOutput("resul1")),
+                         textOutput("resul1"),
+                         br(),
+                         h5(HTML("Sí Valor-p < &alpha;, entonces se rechaza H<sub>0</sub>: &mu; = &mu;<sub>0</sub>."))),
+  
                 
                 tabPanel("Datos", 
                          "A continuación los datos que está usando 
-                         la aplicación, fueron tomados del libro guía Applied Multivariate Statistical Analysis. ", uiOutput('inputData')),
+                         la aplicación.", uiOutput('inputData')),
                 
                 tabPanel("Teoría", 
                          includeHTML("Include.html"))
