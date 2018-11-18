@@ -26,7 +26,7 @@ shinyServer(function(input,output,session){
   
   #Esta.Prue-----
   
-  To<-function(base,alpha,M0){
+  To<-function(base,M0){
     Mmues<-c(unname(colMeans(base))) #varia segun la base sumistrada
     n<- nrow(base) ##DEBE VARIAR SEGUN LA SELECCIÓN
     S<-cov(base) # DEBE VARIAR SEGUN LA SELECCIÓN
@@ -35,9 +35,12 @@ shinyServer(function(input,output,session){
     T0<-n*t(Mmues-M0)%*%Scom%*%(Mmues-M0)
     p<-length(M0) # VARIA segÚn el tamaño de variables escogidas para el vector
     a<-((n-1)*p/(n-p))
-    f<-(qf(alpha,p,n-p))*a
+    value<-pf(q=T0/a,df1=p,df2=n-p,lower.tail=F)
     res<-list(estadistico=T0,p=p,n=n,Mmues=Mmues,S=S,
-              valor=f)
+              a=a,
+              df1=p,
+              df2=n-p,
+              value=value)
     return(res)
   }
   
@@ -54,7 +57,7 @@ shinyServer(function(input,output,session){
     vectorMed <- as.numeric(unlist(strsplit(vectorMed, "[\n, \t]")))
     vectorMed <- vectorMed[!is.na(vectorMed)]
     
-    Mprima<- To(base = dt[,vv], alpha=input$alfa, M0=vectorMed)
+    Mprima<- To(base = dt[,vv], M0=vectorMed)
     round(Mprima$Mmues,2)
           })
   
@@ -79,7 +82,7 @@ shinyServer(function(input,output,session){
     vectorMed <- as.numeric(unlist(strsplit(vectorMed, "[\n, \t]")))
     vectorMed <- vectorMed[!is.na(vectorMed)]
     
-    Mprima<- To(base = dt[,vv], alpha=input$alfa, M0=vectorMed)
+    Mprima<- To(base = dt[,vv], M0=vectorMed)
     round(Mprima$S,2)
     })
 
@@ -93,11 +96,12 @@ shinyServer(function(input,output,session){
     vectorMed <- input$vectorIng
     vectorMed <- as.numeric(unlist(strsplit(vectorMed, "[\n, \t]")))
     vectorMed <- vectorMed[!is.na(vectorMed)]
-    ph <- To(base = dt[,vv], alpha=input$alfa, M0=vectorMed)
-    curve(df(x, df1=ph$p, df2=ph$n-ph$p),
-          from=0, to=10, ylab="Densidad",
-          las=1, lwd=3, col="deepskyblue3")
-    grid()
+    ph <- To(base = dt[,vv], M0=vectorMed)
+    asbio::shade.F(x=(as.numeric(ph$estadistico)/ph$a),
+                   nu1=ph$df1,
+                   nu2=ph$df2, 
+                   tail='upper', las=1, 
+                   shade.col="dodgerblue3", cex=2)
   })
   
   output$titleValorp<- renderText({
@@ -113,7 +117,7 @@ shinyServer(function(input,output,session){
     vectorMed <- as.numeric(unlist(strsplit(vectorMed, "[\n, \t]")))
     vectorMed <- vectorMed[!is.na(vectorMed)]
     
-    ph <- To(base = dt[,vv], alpha=input$alfa, M0=vectorMed)
+    ph <- To(base = dt[,vv], M0=vectorMed)
     paste0('Distribución F (', ph$p,",",ph$n-ph$p,")")
   })
   
@@ -130,14 +134,8 @@ shinyServer(function(input,output,session){
     vectorMed <- as.numeric(unlist(strsplit(vectorMed, "[\n, \t]")))
     vectorMed <- vectorMed[!is.na(vectorMed)]
     
-    ph <- To(base = dt[,vv], alpha=input$alfa, M0=vectorMed)
-    conclusion <- ifelse(ph$estadistico > ph$valor, 'es RECHAZADA',
-                         'NO ES RECHAZADA')
-    paste0('El estadístico de prueba es T^2=', round(ph$estadistico, 2),
-           ' y el valor en el percentil ' , round(input$alfa, 2)*100 , ' para la distribución F con p y n-p grados de libertad ' , round(ph$valor, 2), ', por esta razón
-           se puede concluir que, dada la información de la muestra 
-           la hipótesis nula ', conclusion, 
-           ' a un nivel de significancia del ' , round((1-input$alfa)*100,1), "%")
+    ph <- To(base = dt[,vv], M0=vectorMed)
+        paste0('El estadístico de prueba es T2 =', round(ph$estadistico, 2),', con un valor-p = ',round(ph$value, 4)," ,concluya según el nivel de significancia. ")
   })
   
   output$qqplot <- renderPlot({
@@ -149,8 +147,13 @@ shinyServer(function(input,output,session){
                         sep=input$sep)
     
     require(car)
-    dist<-mahalanobis(dt[,vv],center=colMeans(dt[,vv]),cov=var(dt[,vv]))
-    qqPlot(dist, dist="chisq", df=length(dt[,vv]))
+    dist<-mahalanobis(dt[,vv],
+                      center=colMeans(dt[,vv]),
+                      cov=var(dt[,vv]))
+    qqPlot(dist, dist="chisq", df=length(dt[,vv]), 
+           pch=19,las=1,
+           ylab="Distancias de Mahalanobis",
+           xlab="Cuantiles de una chi-cuadrada con p grados de libertad")
     
     grid()
   })
